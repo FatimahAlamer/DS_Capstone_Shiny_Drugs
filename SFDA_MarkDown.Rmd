@@ -1,0 +1,537 @@
+---
+title: "SFDA Drugs Dataset Analysis"
+author: "Fatimah Alamer"
+date: "11/7/2021"
+
+output: rmdformats::readthedown
+---
+# SFDA Drugs
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+
+```
+
+
+```{r, include= FALSE }
+library(tidyverse)
+library(leaflet)
+library(naniar)
+library(report)
+
+HumanDrugs <- read_csv("Data/HumanDrugs.csv")
+top_price <- read_csv("Data/top_price.csv")
+
+HumanDrugs %>% rename(`Manufacture Country` = `Manufacture Country...29`,`Second Agent`=`Secosnd Agent`)->HumanDrugs
+
+HumanDrugs[HumanDrugs == 20211] <- 2021
+
+
+
+
+HumanDrugs %>%
+    mutate(Drug_Status= case_when(
+     (`Manufacture Country`== "Saudi Arabia") ~ "Saudi Drugs",
+       (`Manufacture Country` != "Saudi Arabia") ~ "Non Saudi Drugs")) -> HumanDrugs
+HumanDrugs %>% filter (`Manufacture Country`== "Saudi Arabia") -> sdrugs
+
+HumanDrugs %>% filter (`Manufacture Country`!= "Saudi Arabia") -> nosdrugs
+
+colnames(HumanDrugs)
+#HumanDrugs%>% select(`Legal Status`,`Distribute area`) ->comp
+
+ #write.csv(HumanDrugs,"HumanDrugs.csv")
+
+
+
+```
+
+
+## Summary 
+This documents provide general description SFDA drugs with comparing to between Saudi drugs and non-Saudi drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator.   
+
+## Introduction
+The Saudi Food and Drug Authority (SFDA) was established under the Council of Ministers resolution as an independent body corporate that directly reports to The President of Council of Ministers. The Authority objective is to ensure safety of food and drug for human and animal, and safety of biological and chemical substance as well as electronic products.  
+
+The main purpose of the SFDA establishment is to regulate, oversee, and control food, drug, medical devices, as well as to set mandatory standard specifications thereof, whether they are imported or locally manufactured. The control and/or testing activities can be conducted in the SFDA or other agency's laboratories.   
+
+Moreover, the SFDA is in charge of consumers awareness on all matters related to food, drug and medical devices and all other products and supplies.
+ **it is consumer responsibility to ensure unregistered drugs/products is tested against safety and efficacy**
+
+## Data description 
+human drug dataset will be used and analyzed, it is available in SFDA website.   
+
+### Summary of variables in the dataset: 
+
+
+Variable  | Description
+-------- | -------------
+Register Number  | Every drug has unique registered number  
+Register Year  | Year of drug registration  
+Product type | All drugs for human use  
+Drug Type|   Generic, biological, NCE (new chemical entity), Radio pharmaceutical or Health products   
+Sub-Type  | Allergen product, biological bio, biosimilar, Biotechnology product ..etc
+Scientific Name | Generic Name  
+Scientific Name Arabic | Generic name in Arabic
+Trade Name  | Commercial name
+Trade Name Arabic | Commercial name in Arabic 
+Strength | Strength of active ingredients in the drug 
+Strength Unit | Strength Unit such as mg, g , ml ...etc
+Pharmaceutical Form | solution, powder for inj..etc
+Administration Route | Route of Administration 
+AtcCode1  |  Anatomical Therapeutic Chemical (ATC) Classification, main pharmacological group
+AtcCode2  | Pharmacological or Therapeutic subgroup
+Size |  drug size
+Size Unit  | unit size such as ml
+Package Types | Blister, Bottle, Vial, Ampule ..etc
+Package Size |  size of the package
+Legal Status | prescription or Over counter drug
+Product Control | controlled/uncontrolled
+Distribute area | hospital or pharmacy 
+Public price | public price for the drug in SR
+shelf Life | length of time that a drug can be stored in months
+Storage conditions | specific requirements for registered drugs
+Marketing Company  |  a company that provides marketing services for drugs
+Marketing Country |   a country that provides marketing services for drugs
+Manufacture Name | Manufacture Name of drugs
+Manufacture Country | Manufacture Country of the drugs 
+2Manufacture Name  | second Manufacture Name of drugs
+Manufacture Country | Country of the drug manufacturer
+Secondary package  manufacture  |
+Main Agent   | company that provides organizing transactions between two other parties.
+Second Agent | there could be more than 1 agent for the same drug
+Third agent  | there could be more than 2 agents for the same drug 
+Marketing Status  |   all drugs are marketed 
+Authorization Status  |  valid or suspend 
+longitude | added to the original data for mapping 
+latitude| added to the original data for mapping 
+
+
+```{r, include= FALSE}
+  gg_miss_var(HumanDrugs)
+
+
+```
+
+
+## Data Comparison
+ 
+#### RegisterYear  
+Year of drug registration 
+
+
+
+```{r}
+ggplot(HumanDrugs) +
+    geom_bar(aes(x = RegisterYear, fill = `Legal Status`), 
+             position = "dodge", stat = "count")+
+  facet_grid(~Drug_Status)+
+  theme_minimal()+
+scale_fill_manual(values=c("#BE3144", "#113A5D"))
+```
+Starting of Saudi company was almost after 90s, the peak in recent years, the presences of covid-19 might affect increasing drug registration especially for non-Saudi drugs. 
+
+
+
+#### Public Price
+
+```{rinclude=FALSE}
+
+
+HumanDrugs %>% select(`Public price`) %>% summary()
+
+```
+
+```{r}
+#ggplot(HumanDrugs) +
+   # geom_bar(aes(x = `Public price`, fill = as.factor(`Legal Status`)), 
+         #    position = "dodge", stat = "count")
+```
+
+```{r}
+HumanDrugs  %>% filter(`Public price`< 1000,`Distribute area`!="NA" ) %>% 
+  ggplot( aes(x = RegisterYear, y = `Public price`, color=`Distribute area`)) + 
+ geom_jitter(alpha = 0.7)+
+  # geom_ribbon(alpha = 0.3)+
+  scale_x_continuous("Register Year", limits = c(1980,2021), expand = c(0,0))+
+  facet_grid(~Drug_Status)+
+      theme_minimal()+
+scale_color_manual(values=c("#BE3144", "#113A5D"))
+```
+in general, higher prices in recent years for hospital distribution, 
+
+pleas note that there are 230 missing values in the plot which cover 3% of the data this issue has been solved in the shiny app, which provide scalable price index with ability to navigate the drug for each country.
+
+
+```{r}
+HumanDrugs  %>% filter(`Public price`< 150,`Distribute area`!="NA" ) %>% 
+  ggplot( aes(x  = `Public price`)) + 
+  geom_histogram(binwidth = 3, center=5, fill="#113A5D")+
+  facet_grid(~Drug_Status)+
+  theme_minimal()+
+scale_x_continuous("Price", limits = c(1,150), expand = c(0,0))
+  #scale_x_continuous("Register Year", limits = c(1980,2021), ex5
+```
+more cheaper medications is synthesized 
+
+
+#### DrugType   
+almost 2/3 of drugs are generic followed by A New Chemical Entity drugs.
+```{r, echo = FALSE, eval = TRUE}
+ HumanDrugs %>% filter(!is.na(DrugType),
+                        DrugType != "NA") %>% count(DrugType, sort = T) %>%  knitr::kable()
+```
+
+```{r}
+
+ HumanDrugs  %>% filter(DrugType != "NA") %>% 
+  #arrange(desc(DrugType))
+ggplot( aes(x = DrugType, fill = Drug_Status)) + 
+  geom_bar(position = "dodge")+
+  theme_minimal()+
+scale_fill_manual(values=c("#BE3144", "#113A5D"))
+```
+most common drugs are Generic or NCE, It makes a sense because biological and radiophamaceticals are since these drugs used in serious diseases such as cancer!
+ description of each type
+
+1- A generic drug is a medication that has exactly the same active ingredient as the brand name drug and yields the same therapeutic effect.[(1)](https://www.bing.com/search?q=what+is+genric++drugs&go=Search&qs=ds&form=QBRE)  
+
+2- A New Chemical Entity (NCE) is a drug that does not contain any 
+active moiety that has been approved by FDA with any other application. 
+The manufacturers of an innovator drug generally develop a NCE during 
+the early development stage of the product cycle. The NCE, then, undergoes various clinical trials in order to transform into a drug product[(2)](https://www.freyrsolutions.com/what-is-new-chemical-entity-nce).     
+
+3- Biological drugs (commonly referred to as ‘biologics’ or ‘biopharmaceuticals’) are drugs produced through biological processes. They currently target diseases which, hitherto, had very limited or no available treatment options – including several types of cancers, autoim- mune diseases and other non-communicable diseases[(3)](https://www.twn.my/title2/books/pdf/BiologicalDrugs-eng.pdf#:~:text=BIOLOGICAL%20drugs%20%28commonly%20referred%20to%20as%20%E2%80%98biologics%E2%80%99%20or,cancers%2C%20autoim-%20mune%20diseases%20and%20other%20non-communicable%20diseases.  ).   
+
+4- Radiopharmaceuticals are radioactive chemicals or pharmaceutic preparations, labeled with a radionuclide in tracer or therapeutic concentration [(4)](https://www.bing.com/search?q=radiopharmaceutical+drugs&cvid=d7f86b4972624a218438fbe54ef7413a&aqs=edge.3.69i57j0l8.6607j0j4&FORM=ANAB01&PC=ASTS).
+
+Comparing Drug type against price
+  
+  
+```{r, echo = FALSE, eval = TRUE}
+
+ HumanDrugs  %>% filter(DrugType != "NA",`Public price`< 1000 ) %>% 
+  #arrange(desc(DrugType))
+ggplot( aes(x = DrugType, y = `Public price`,fill=DrugType)) + 
+  geom_boxplot()+
+  theme_minimal()+
+  scale_fill_manual(values=c("#8EA6B4","#BE3144", "#113A5D","#699C78",
+'#F6C90E'))+
+ facet_grid(~Drug_Status)
+```
+
+
+#### ADMINSTRATION ROUTE
+
+```{r, include = FALSE }
+
+  HumanDrugs %>% count(AdministrationRoute)  -> ROA
+
+ROA10 <- c("Oral", "Intravenous", "Topical", "Parenteral","Subcutaneous",'Ophthalmic', 'Intramuscular')
+
+ 
+
+```
+
+```{r}
+ HumanDrugs%>% filter(AdministrationRoute %in%  ROA10) %>% 
+  
+ggplot( aes(x = AdministrationRoute, fill = Drug_Status)) + 
+  geom_bar(position = position_dodge(width = 0.2)) +
+ scale_fill_brewer(palette = "Paired")+
+theme_minimal()
+```
+finding our focus
+
+Saudi manufacturer focus more on oral drugs followed by Iv drugs but then what kind of iv drug provided?
+
+
+```{r}
+sdrugs%>% filter ( AdministrationRoute =="Intravenous") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% 
+  head(10)%>% knitr::kable()
+```
+ok, thats what I expect, manufacturer focus really on basic treatment which is may not be spesifc to any disease we have also import top 3 from other countries. 
+let us try on oral medications 
+
+```{r}
+sdrugs%>% filter ( AdministrationRoute =="Oral") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% knitr::kable()
+```
+This is gives us better idea than IV drugs 
+pregablin in the top 
+Pregablin in last 5 years this drug has been added to controlled drugs beacuse they found that it cause addiction. Many  patients still  addict to this medication. so it is consumer need! 
+MONTELUKAST used as prophylaxis and chronic treatment of asthma and Allergic or Perennial Rhinitis which is expected because of our dusty weather
+Tadalfil & SILDENAFIL used in pulmonary hypertension  but gained popularity due to use for improving erectile function.
+Levetiracetam is anti-epliptic 
+OLANZAPINE $ QUETIAPINE FUMARATE is anti-psychiatric medications. they can be overuse 
+Glimepiride, finally we got is an anti-diabetic medication!
+Honestly, I was expected antidiapetic & antihypertensive medication to be in the top.
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{rm include = FALSE}
+sdrugs%>% filter ( AdministrationRoute =="Oral") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))-> Sdrugsnames
+
+nosdrugs%>% filter ( AdministrationRoute =="Oral") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))-> noSdrugsnames
+
+
+Sdrugsnames %>% 
+  anti_join(noSdrugsnames, by = "Scientific Name") ->disno
+
+```
+
+
+
+
+
+
+
+
+```{r}
+
+
+
+
+
+```{r, include=FALSE, echo=FALSE, eval=FALSE}
+
+sdrugs %>% count(AtcCode1) -> SAtcCode1
+nosdrugs %>% count(AtcCode1) -> NOSAtcCode1
+colnames(HumanDrugs)
+HumanDrugs %>% select (AtcCode1) %>% filter(AtcCode1== "NA") ->NAATC
+nosdrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->NOATC
+sdrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->SATC
+HumanDrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->sn
+
+NOATC %>% 
+  anti_join(SATC, by = "AtcCode1") ->anti
+
+SATC %>% 
+  anti_join(NOATC, by = "AtcCode1") ->anti2
+#by name
+
+anti2 %>% distinct(AtcCode1,`Scientific Name`,`Drug_Status`)->mn
+
+unique(anti2$`Scientific Name`) -> unanti2
+
+SATC %>% 
+  anti_join(NOATC, by = "Scientific Name") ->anti222
+
+unique(anti2$`Scientific Name`) -> unanti2
+
+#anti2 %>% group_by(AtcCode1) %>% summarise(AtcCode1 = n()) %>% arrange(desc(AtcCode1)) -> MMMM
+
+NAATC %>%filter (AtcCode1=="NA") -> NNNN
+
+```
+
+
+```{r}
+sdrugs%>% filter ( AdministrationRoute =="Intramuscular") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% 
+  head(10)%>% 
+  
+  knitr::kable()
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+sdrugs%>% filter ( AdministrationRoute =="Intravenous") %>% group_by (`Scientific Name`) %>% 
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% 
+  head(10)%>% knitr::kable()
+```
+
+
+
+
+
+```{r, include = FALSE}
+ HumanDrugs  %>% filter(AdministrationRoute %in%  ROA10) %>% 
+  #arrange(desc(DrugType))
+ggplot( aes(x = AdministrationRoute, y= `Public price`)) + 
+  geom_bar(stat = "identity")
+```
+
+### Manufacturer Country
+
+top 10 Manufacturer Countries 
+```{r}
+HumanDrugs %>% count(`Manufacture Country`, sort=T) %>% head(10)
+#%>% 
+#ggplot(aes(x = `Manufacture Country`)) +
+           # geom_bar(  position = "dodge", stat = "count")
+
+
+
+
+```
+
+
+#### Shelf life
+length of time that a drug can be stored in months. It differ than expiration date.
+From medical perspective: The shelf life generally relates to a drug's quality over a specified period of time, whereas the expiration date relates to both quality and safety of a medication at a specific point in time[(5)](https://specialties.bayt.com/en/specialties/q/7932/what-is-the-difference-between-expiry-date-and-shelf-life/). 
+
+```{r}
+  ggplot(HumanDrugs, aes(x =shelfLife)) +
+    geom_density() +
+   scale_x_continuous("Shelf Life", limits = c(10,80), expand = c(0,0))
+```
+
+as it shown, most of medicatins shelf life between 20 to 40 months which is almost equal to 2-3 years 
+ price vs shelf life
+
+
+```{r, include=FALSE}
+
+#(final_status = case_when(any(status == "Pending") ~ "Pending",
+     #creat                     #           any(status == "Rejected") ~ "Rejected", #create A new columne for national drugs 
+ # HumanDrugs %>%
+  #  mutate(National_Drugs= case_when(
+  #    (`Manufacture Country`== "Saudi Arabia") ~ "Yes",
+   #    (`Manufacture Country` != "Saudi Arabia") ~ "No")) -> HumanDrugs
+
+
+#HumanDrugs %>% filter (`Manufacture Country`== "Saudi Arabia") -> sdrugs
+
+#HumanDrugs %>% filter (`Manufacture Country`!= "Saudi Arabia") -> nosdrugs
+
+#HumanDrugs %>% filter (AtcCode1 == ) -> NAATC
+
+#HumanDrugs %>% count(AtcCode1) -> ATCG
+
+```
+
+
+
+
+
+## General Information 
+
+### Top 10 Highly consumed Drugs 
+
+many trade drugs for same generic drugs means that is highly consumed
+
+```{r}
+HumanDrugs%>% group_by (`Scientific Name`) %>%
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% knitr::kable()
+```
+
+**Sodium Chloride** Normal saline, it is widely used in the hospitals which make a sense that is the most common one
+
+**DExtrose** Also widly used, it is simple sugar, so mainly used for Hypoglycemia, it is used along with Sodium clorde 
+
+**Paracetamol & diclofinac** both are pain killers, both are widely used inside and outside hospitals, both have oral form, In general, Diclofinac is available also as intermuscular which make it prefered mild to moderate pain killer in the ER rather than parecetamol (IV) which may take longer time.
+
+**amoxicillins&clavunic acid** β-lactam antibiotics (beta-lactam antibiotics), it has wide antibactrial spectrum covering & it taken orally, generally it can treat: : Ear, Nose, & Throat Infections,Genitourinary Tract Infections,Skin & Skin Structure Infections,Lower Respiratory Tract Infections
+
+**QUETIAPINE** it is used for psychiatric disorders such as: Major Depressive Disorder, Schizophrenia,Bipolar I Disorder & insomnia 
+
+**CIPROFLOXACIN** Fluoroquinolones antibiotics, unlike amoxicillin which is available only in oral dose, cipro also has IV form which make it suitable for inpatients hospitals, it covers lower respiratory tract infections such as Pneumonia, urinary tract infections (UTI), bone & skin infection. 
+
+**MONTELUKAST SODIUM**  it is used as prophylaxis and chronic treatment of asthma and Allergic or Perennial Rhinitis
+
+**Pregabalin** Antiepileptic Agent Useful for Neuropathic Pain, it has also anticonvulsant, analgesic, and anxiolytic properties. in last 5 years this drug has been added to controlled drugs beacuse they found that it cause addiction.Many  patients still  addict to this medication. so it is consumer need! 
+
+
+
+### What are the top 10 registered  priced drugs?
+
+```{r }
+HumanDrugs %>% select(`Public price`,`Scientific Name`,`DrugType`,`RegisterYear`,`Manufacture Country`,`AdministrationRoute`) %>% arrange(desc(`Public price`)) %>% head(10)  %>% knitr::kable()
+
+```
+
+**Voretigene Neparvovec**	 is an adeno-associated viral gene therapy used to treat biallelic RPE65 mutation associated retinal dystrophy it is subretinal injection. FDA aprroved in 2017
+
+**Tisagenlecleucel**sold under the brand name Kymriah, is a medication for the treatment of B-cell acute lymphoblastic leukemia (ALL) which uses the body's own T cells to fight cancer (adoptive cell transfer).Acute lymphoblastic leukemia in children is more common than other types of cancer	
+
+**NUSINERSEN**  used in treating spinal muscular atrophy (SMA), a rare neuromuscular disorder.In December 2016, it became the first approved drug used in treating this disorder.
+
+**ELIGLUSTAT** used for the long-term treatment of Gaucher disease type 1
+
+**CATRIDECACOG**  indicated in patients with a rare clotting disorder, congenital factor XIII A-subunit deficiency, which is a kind of Factor XIII deficiency. The drug prevents bleeding in patients with this condition, and has been approved FDA in 2014.
+
+**LAROTRECTINIB** is for adults and children with solid tumors that test positive for NTRK genes, which can help cancerous tumors grow. Tumors with this type of genetic change are not common but can be found in cancers of the salivary gland, thyroid, lung, and soft tissue sarcoma
+
+**GRAZOPREVIR**	Antiviral drug for choroinc heptits c infection, hepatitis C protease inhibitor. 
+
+**IPILIMUMAB**
+
+**ERDAFITINIB**
+
+**Lanadelumab**
+
+
+#### Top priced drug for each manufucure contry registered in SFDA
+```{r}
+
+
+
+
+####
+# Make a color palette called pal for the values of `Distribution area` using `colorFactor()`  
+pal <- colorFactor(palette = c("#A9333A", "#000D6B"), 
+                   levels = c("Hospital", "Pharmacy"))
+
+# Add circle markers that color colleges using pal() and the values of sector_label
+
+leaflet(top_price) %>% 
+  addProviderTiles(provider = "CartoDB") %>% 
+  addCircles(lng = ~longitude, lat = ~latitude) %>% 
+  clearBounds() %>% 
+  clearMarkers()%>%
+  
+ # addMarkers(data = top_price) %>%
+  #my_Map %>%
+
+  addCircleMarkers(data = top_price, radius = 5, 
+                   color = ~pal(`Distribute area`), 
+                   label = ~paste0(`Trade Name`,"(price=",`Public price`,"SR)" )) %>% 
+  addLegend(position="bottomright", pal = pal,title = "Distribution area " ,
+            values = c("Hospital", "Pharmacy"))
+```
+
+
+
+
+### what are suspended drugs 
+```{r}
+ HumanDrugs %>% filter (`Authorization Status`=="Suspended")%>% select(`Scientific Name`, `Manufacture Country`,RegisterYear,`Legal Status`) %>% knitr::kable()
+
+```
+## Conclusion 
+
+Although Saudi pharmaceutical companies started in late 90s, but it seems we are very dependents on international pharmaceutical companies. the focus on intravenous medication was on sodium Chloride and other electrolytes, while on oral medication was on pain killers and  antidepressants, there are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease as we have  emerging of serious diseases such as IHDD and stroke which is the main cause of mortality in Saudi Arabia [6](http://www.healthdata.org/saudi-arabia)[7](https://www.worldlifeexpectancy.com/country-health-profile/saudi-arabia).
+
+
+## References 
+(1)Sfda.gov.sa. 2021. Overview | Saudi Food and Drug Authority. [online] Available at: <https://www.sfda.gov.sa/en/overview> [Accessed 13 November 2021].
+
+
+()Institute for Health Metrics and Evaluation. 2021. Saudi Arabia. [online] Available at: <http://www.healthdata.org/saudi-arabia> [Accessed 13 November 2021].
+
+()World Life Expectancy. 2021. HEALTH PROFILE SAUDI ARABIA. [online] Available at: <https://www.worldlifeexpectancy.com/country-health-profile/saudi-arabia> [Accessed 13 November 2021].
+
