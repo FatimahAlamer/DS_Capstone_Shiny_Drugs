@@ -49,7 +49,7 @@ colnames(HumanDrugs)
 
 
 ## Summary 
-This documents provide general description SFDA drugs with comparing to between Saudi drugs and non-Saudi drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator.   
+This documents provide general description SFDA drugs with comparing  between Saudi drugs and non-Saudi drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator.   
 
 ## Introduction
 The Saudi Food and Drug Authority (SFDA) was established under the Council of Ministers resolution as an independent body corporate that directly reports to The President of Council of Ministers. The Authority objective is to ensure safety of food and drug for human and animal, and safety of biological and chemical substance as well as electronic products.  
@@ -103,9 +103,7 @@ Main Agent   | company that provides organizing transactions between two other p
 Second Agent | there could be more than 1 agent for the same drug
 Third agent  | there could be more than 2 agents for the same drug 
 Marketing Status  |   all drugs are marketed 
-Authorization Status  |  valid or suspend 
-longitude | added to the original data for mapping 
-latitude| added to the original data for mapping 
+Authorization Status  |  valid or suspended 
 
 
 ```{r, include= FALSE}
@@ -116,6 +114,29 @@ latitude| added to the original data for mapping
 
 
 ## Data Comparison
+
+```{r}
+ggplot(HumanDrugs) +
+    geom_bar(aes(x = Drug_Status, fill = Drug_Status), 
+             position = "dodge", stat = "count")+
+  theme_classic()+
+    scale_y_continuous("Number of Drugs", limits = c(0,7000), expand = c(0,0))+
+
+scale_fill_manual(values=c("#BE3144", "#113A5D"))
+
+```
+
+ 
+```{r}
+
+HumanDrugs %>% 
+    group_by( Drug_Status ) %>% 
+    summarise( percent = 100 * n() / nrow( HumanDrugs ) )
+```
+ overall, Saudi drugs contributes to only 30% of registered drugs
+ 
+ by ATCcode, keeping unique value
+ 
  
 #### RegisterYear  
 Year of drug registration 
@@ -263,7 +284,7 @@ This is gives us better idea than IV drugs
 pregablin in the top 
 Pregablin in last 5 years this drug has been added to controlled drugs beacuse they found that it cause addiction. Many  patients still  addict to this medication. so it is consumer need! 
 MONTELUKAST used as prophylaxis and chronic treatment of asthma and Allergic or Perennial Rhinitis which is expected because of our dusty weather
-Tadalfil & SILDENAFIL used in pulmonary hypertension  but gained popularity due to use for improving erectile function.
+Tadalfil & SILDENAFIL used in pulmonary hypertension and impotence
 Levetiracetam is anti-epliptic 
 OLANZAPINE $ QUETIAPINE FUMARATE is anti-psychiatric medications. they can be overuse 
 Glimepiride, finally we got is an anti-diabetic medication!
@@ -302,6 +323,16 @@ Sdrugsnames %>%
 
 
 ```{r}
+HumanDrugs$`Scientific Name` = tolower(HumanDrugs$`Scientific Name`)
+
+
+HumanDrugs %>% distinct(`Scientific Name`)->dis_Human_drugs
+
+
+
+
+```
+
 
 
 
@@ -309,19 +340,90 @@ Sdrugsnames %>%
 
 ```{r, include=FALSE, echo=FALSE, eval=FALSE}
 
-sdrugs %>% count(AtcCode1) -> SAtcCode1
-nosdrugs %>% count(AtcCode1) -> NOSAtcCode1
-colnames(HumanDrugs)
-HumanDrugs %>% select (AtcCode1) %>% filter(AtcCode1== "NA") ->NAATC
-nosdrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->NOATC
+
+
+
+
+#sdrugs %>% count(AtcCode1) -> SAtcCode1
+# Saudi drugs =2315
+
+sdrugs$`Scientific Name` = tolower(sdrugs$`Scientific Name`)
+
+
 sdrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->SATC
-HumanDrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->sn
+#distinct Saudi srugs =561
 
+# non Saudi 
+nosdrugs$`Scientific Name` = tolower(nosdrugs$`Scientific Name`)
+
+
+nosdrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->NOATC
+
+
+#
+NOATC %>% distinct(`Scientific Name`)->dis_NOATC
+
+
+
+
+#1654
+
+HumanDrugs %>% group_by(`Scientific Name`) %>% filter(`Manufacture Country`!="Saudi Arabia") ->No_Saudi_Drug
+HumanDrugs %>% group_by(`Scientific Name`) %>% filter(`Manufacture Country`=="Saudi Arabia") ->Saudi_Drug
+
+Saudi_Drug %>% 
+  anti_join(No_Saudi_Drug, by = "Scientific Name") ->anti_Saudi
+anti_Saudi %>% distinct(`Scientific Name`)->di_anti_Saudi
+
+
+colnames(HumanDrugs)
+# anti jon for non Saudi drugs
 NOATC %>% 
-  anti_join(SATC, by = "AtcCode1") ->anti
+  anti_join(SATC, by = "Scientific Name") ->anti
+anti %>% distinct(`Scientific Name`)->dis_anti
 
+
+# anti join for saudi drug
 SATC %>% 
   anti_join(NOATC, by = "AtcCode1") ->anti2
+anti2 %>% distinct(`Scientific Name`)->dis_anti2
+ALLOPURINOL
+
+#SATC %>% distinct(`Scientific Name`)->dis_ASTC
+#SATC[!grepl("DEXTROSE", SATC$`Scientific Name`),]
+
+#SATC %>% filter(!grepl('DEXTROSE',`Scientific Name`))-> gggg
+#SATC %>% filter(!grepl('Sodium chloride',`Scientific Name`))-> MMM
+
+
+#df %>% filter(!grepl('REVERSE', Name))
+#library(stringr)
+
+#df %>%  filter(!str_detect(Name, 'REVERSE'))
+
+
+
+
+#anti join
+dis_ASTC %>% 
+  anti_join(dis_NOATC, by = "Scientific Name") ->anti_for_SA
+
+
+anti_for_SA %>%
+    filter(-contains("DEXTROSE"))->anti_for_SA_NO_DX
+
+#
+dis_NOATC %>% 
+  anti_join(dis_ASTC, by = "Scientific Name") ->anti_for_NOSA
+
+
+nosdrugs %>% count(AtcCode1) -> NOSAtcCode1
+
+#HumanDrugs %>% select (AtcCode1) %>% filter(AtcCode1== "NA") ->NAATC
+
+HumanDrugs %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->sn
+
+
 #by name
 
 anti2 %>% distinct(AtcCode1,`Scientific Name`,`Drug_Status`)->mn
@@ -339,6 +441,22 @@ NAATC %>%filter (AtcCode1=="NA") -> NNNN
 
 ```
 
+
+
+Finding oral exclusive:
+
+```{r}
+sdrugs%>% filter ( AdministrationRoute =="Oral") %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->oral_SATC
+
+nosdrugs%>% filter ( AdministrationRoute =="Oral") %>% select (AtcCode1,`Scientific Name`,`Drug_Status`) ->oral_No_SATC
+
+oral_SATC %>% 
+  anti_join(oral_No_SATC, by = "Scientific Name") ->anti_for_oralsat
+anti_for_oralsat %>% distinct(`Scientific Name`)-> d_anti_for_oralsat
+
+
+
+```
 
 ```{r}
 sdrugs%>% filter ( AdministrationRoute =="Intramuscular") %>% group_by (`Scientific Name`) %>% 
@@ -525,6 +643,28 @@ leaflet(top_price) %>%
 ## Conclusion 
 
 Although Saudi pharmaceutical companies started in late 90s, but it seems we are very dependents on international pharmaceutical companies. the focus on intravenous medication was on sodium Chloride and other electrolytes, while on oral medication was on pain killers and  antidepressants, there are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease as we have  emerging of serious diseases such as IHDD and stroke which is the main cause of mortality in Saudi Arabia [6](http://www.healthdata.org/saudi-arabia)[7](https://www.worldlifeexpectancy.com/country-health-profile/saudi-arabia).
+
+
+
+```{r}
+library(plotly)
+
+
+fig <- plot_ly(iris, x = ~Petal.Length, y = ~Petal.Width, type = 'scatter', mode = 'markers',
+        hoverinfo = 'text',
+        text = ~paste('</br> Species: ', Species,
+                      '</br> Petal Length: ', Petal.Length,
+                      '</br> Petal Width: ', Petal.Width))
+
+
+
+fig <- plot_ly(HumanDrugs, x = ~RegisterYear, y = ~`Public price`, type = 'scatter', mode = 'markers',
+        hoverinfo = 'text',
+        text = ~paste('</br> Trade Name : ', `Trade Name`,
+                      '</br> Scientific Name: ', `Scientific Name`,
+                      '</br> Public price: ', `Public price`))
+fig
+```
 
 
 ## References 
