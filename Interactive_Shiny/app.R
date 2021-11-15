@@ -5,7 +5,6 @@
 library(shiny)
 library(shinythemes)
 library(plotly)
-library(colourpicker)
 library(tidyverse)
 library(leaflet)
 top_price <- read_csv("top_price.csv")
@@ -15,11 +14,12 @@ HumanDrugs <- read_csv("HumanDrugs.csv")
 HumanDrugs <- subset(HumanDrugs, `Public price`> 0)
 
 
+
  # define UI
 ui <- fluidPage(theme = shinytheme("flatly"),
  navbarPage(title = "SFDA Drugs",
-            tabPanel("Map for Manufacturer Countries with the highst price", leafletOutput("mymap",width = "100%", height=300)),
-            tabPanel("Countries plot with registered prices ",
+            tabPanel("All Registered Manufacturer Countries with the highest price", leafletOutput("mymap",width = "100%", height=300)),
+            tabPanel("All Registered Drugs in One Plot",
                      sidebarLayout(
                        sidebarPanel(
                          #textInput("title", "Title", "Register drug year vs Public price"),
@@ -48,7 +48,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
   fluidRow(
     sliderInput(inputId = "RegYe", "Registered Year",
                 min = 1980, max = 2021,
-                value = c(2010, 2020)),
+                value = c(2010, 2020),sep ="" ),
     
            column(3,
                   selectInput("man",
@@ -132,17 +132,26 @@ ui <- fluidPage(theme = shinytheme("flatly"),
     # Replace the `renderPlot()` with the plotly version
     output$plot <- renderPlotly({
       # Convert the existing ggplot2 to a plotly plot
-      ggplotly({
-        data <- subset(HumanDrugs,
+    #  ggplotly({
+        data1 <- subset(HumanDrugs,
                        `Manufacture Country...29` %in% input$manu &
                          `Public price` >= input$price[1] &  `Public price` <= input$price[2])
-        
-        p<- data  %>% 
+       
+         p <- plot_ly(data1, x = ~RegisterYear, y = ~`Public price`, type = 'scatter', mode = 'markers',
+                       hoverinfo = 'text',
+                       text = ~paste('</br> Trade Name : ', `Trade Name`,
+                                     '</br> ATC Classification: ', `AtcCode1`,
+                                     '</br> Public price: ', `Public price`))
+         p
+         
+        #p<- data  %>% 
           #filter(`Public price`< 5000 ) %>% 
-          ggplot( aes(x = RegisterYear, y = `Public price`)) + 
-          geom_point(size = 1,shape=1 , col ="#001E6C")+
-          scale_x_continuous("Register Year", limits = c(1980,2022), expand = c(0,0))+
-          theme_light()
+         # ggplot( aes(x = RegisterYear, y = `Public price`)) + 
+         # geom_point(size = 1,shape=1 , col ="#001E6C")+
+          # geom_label()
+        
+          #scale_x_continuous("Register Year", limits = c(1980,2022), expand = c(0,0))+
+        #  theme_light()
         #scale_x_log10() +
         # ggtitle(input$title)
         
@@ -150,7 +159,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
         # p <- p + geom_smooth(method = "lm")
         # }
         # p
-      })
+    #  })
     })
     
     pal <- colorFactor(palette = c("#A9333A", "#000D6B"), 

@@ -524,12 +524,12 @@ fig <- plot_ly(iris, x = ~Petal.Length, y = ~Petal.Width, type = 'scatter', mode
                       '</br> Petal Length: ', Petal.Length,
                       '</br> Petal Width: ', Petal.Width))
 
-
+colnames(HumanDrugs)
 
 fig <- plot_ly(HumanDrugs, x = ~RegisterYear, y = ~`Public price`, type = 'scatter', mode = 'markers',
         hoverinfo = 'text',
         text = ~paste('</br> Trade Name : ', `Trade Name`,
-                      '</br> Scientific Name: ', `Scientific Name`,
+                      '</br> ATC Classification: ', `AtcCode1`,
                       '</br> Public price: ', `Public price`))
 fig
 ```
