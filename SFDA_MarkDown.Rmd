@@ -65,7 +65,7 @@ colnames(HumanDrugs)
 
 
 ## Summary 
-This documents provide general description SFDA drugs with comparing  between Saudi drugs manufactured and non-Saudi manufactured drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator.   
+This documents provide general description SFDA drugs with comparing  between Saudi drugs manufactured and non-Saudi manufactured drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator [go to SFDA shiny app.  ](https://zuah3d-fatimahalamer.shinyapps.io/Interactive_Shiny_SFDA/)   
 
 ## Introduction
 The Saudi Food and Drug Authority (SFDA) was established under the Council of Ministers resolution as an independent body corporate that directly reports to The President of Council of Ministers. The Authority objective is to ensure safety of food and drug for human and animal, and safety of biological and chemical substance as well as electronic products.  
