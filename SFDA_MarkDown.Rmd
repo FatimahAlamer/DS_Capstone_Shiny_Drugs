@@ -47,8 +47,8 @@ HumanDrugs[HumanDrugs=="formoterol"] <- "formterol"
 
 HumanDrugs %>%
     mutate(Drug_Status= case_when(
-     (`Manufacture Country`== "Saudi Arabia") ~ "Saudi Manufactured Drugs",
-       (`Manufacture Country` != "Saudi Arabia") ~ "Non Manufactured Saudi Drugs")) -> HumanDrugs
+     (`Manufacture Country`== "Saudi Arabia") ~ "Saudi Drugs",
+       (`Manufacture Country` != "Saudi Arabia") ~ "Non Saudi Drugs")) -> HumanDrugs
 HumanDrugs %>% filter (`Manufacture Country`== "Saudi Arabia") -> sdrugs
 
 HumanDrugs %>% filter (`Manufacture Country`!= "Saudi Arabia") -> nosdrugs
@@ -132,7 +132,7 @@ ggplot(HumanDrugs) +
              position = "dodge", stat = "count")+
   theme_classic()+
     scale_y_continuous("Number of Drugs", limits = c(0,7000), expand = c(0,0))+
-labs(title = "Comparing between Saudi manufactureddrugs & non-Saudi manufactured drugs")+
+labs(title = "Comparing between Saudi drugs & non-Saudi drugs")+
 scale_fill_manual(values=c("#BE3144", "#113A5D"))
 
 ```
@@ -510,29 +510,9 @@ it seems that all of suspneded drugs might have manufacture issues or any other 
 ## Conclusion 
 
 Although Saudi pharmaceutical companies started in late 90s, but it seems we are very dependents on international pharmaceutical companies. the focus on intravenous medication was on sodium Chloride and other electrolytes, while on oral medication was on pain killers and  antidepressants and anti-psychiatrics, also anti-psychiatrics are top of imported drugs, thus indicate increase mental issues on Saudi Arabia.  we have  emerging of serious diseases such as IHD and stroke which is the main cause of mortality in Saudi Arabia [A,](http://www.healthdata.org/saudi-arabia)[B ](https://www.worldlifeexpectancy.com/country-health-profile/saudi-arabia). even though, patient  with DM, HTN, or cancer may have depression especially if that affect their life, which make increasing of importing anti-psychiatrics is reasonable!
-to conculde, There are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease which is incresing!.
+to conculde, There are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease which is increasing!.
 
 
-
-```{r, include=FALSE}
-library(plotly)
-
-
-fig <- plot_ly(iris, x = ~Petal.Length, y = ~Petal.Width, type = 'scatter', mode = 'markers',
-        hoverinfo = 'text',
-        text = ~paste('</br> Species: ', Species,
-                      '</br> Petal Length: ', Petal.Length,
-                      '</br> Petal Width: ', Petal.Width))
-
-colnames(HumanDrugs)
-
-fig <- plot_ly(HumanDrugs, x = ~RegisterYear, y = ~`Public price`, type = 'scatter', mode = 'markers',
-        hoverinfo = 'text',
-        text = ~paste('</br> Trade Name : ', `Trade Name`,
-                      '</br> ATC Classification: ', `AtcCode1`,
-                      '</br> Public price: ', `Public price`))
-fig
-```
 
 
 ## References 
