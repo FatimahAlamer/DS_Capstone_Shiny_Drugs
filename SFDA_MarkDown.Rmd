@@ -369,7 +369,7 @@ sdrugs%>% filter ( AdministrationRoute =="Intramuscular") %>% group_by (`Scienti
   
   knitr::kable()
 ```
-top 4 drugs are antibiotic
+the top 4 drugs are antibiotic
 
 
 
