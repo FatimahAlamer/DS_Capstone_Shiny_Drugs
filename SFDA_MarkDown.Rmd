@@ -43,19 +43,26 @@ HumanDrugs[HumanDrugs=="aripiprazol"] <- "aripiprazole"
 HumanDrugs[HumanDrugs=="water for injections"] <- "water"
 HumanDrugs[HumanDrugs=="formoterol"] <- "formterol"
 
+HumanDrugs[HumanDrugs=="montelukast sodium"] <- "montelukast"
+HumanDrugs[HumanDrugs=="quetiapine fumarate"] <- "quetiapine"
+HumanDrugs[HumanDrugs=="sildenafil citrate"] <- "sildenafil"
+
 
 
 HumanDrugs %>%
     mutate(Drug_Status= case_when(
-     (`Manufacture Country`== "Saudi Arabia") ~ "Saudi Manufactured Drugs",
-       (`Manufacture Country` != "Saudi Arabia") ~ "Non Manufactured Saudi Drugs")) -> HumanDrugs
+     (`Manufacture Country`== "Saudi Arabia") ~ "Saudi Drugs",
+       (`Manufacture Country` != "Saudi Arabia") ~ "Non Saudi Drugs")) -> HumanDrugs
 HumanDrugs %>% filter (`Manufacture Country`== "Saudi Arabia") -> sdrugs
-
 HumanDrugs %>% filter (`Manufacture Country`!= "Saudi Arabia") -> nosdrugs
-gg_miss_var(HumanDrugs)
+
+
+
+
+
+
 
 colnames(HumanDrugs)
-#HumanDrugs%>% select(`Legal Status`,`Distribute area`) ->comp
 
  #write.csv(HumanDrugs,"HumanDrugs.csv")
 
@@ -64,8 +71,16 @@ colnames(HumanDrugs)
 ```
 
 
+
+```{r, include=FALSE}
+##missing data
+gg_miss_var(HumanDrugs)
+vis_miss(HumanDrugs)
+```
+
+
 ## Summary 
-This documents provide general description SFDA drugs with comparing  between Saudi drugs manufactured and non-Saudi manufactured drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator [go to SFDA shiny app.  ](https://zuah3d-fatimahalamer.shinyapps.io/Interactive_Shiny_SFDA/)   
+This documents provide general description SFDA drugs with comparing  between Saudi drugs manufactured and non-Saudi manufactured drugs such as comparing  prices, drug type, route of administration. shiny app is also available which provide interactive searchable table, interactive map, plot for SFDA drugs and paracetamol calculator.   
 
 ## Introduction
 The Saudi Food and Drug Authority (SFDA) was established under the Council of Ministers resolution as an independent body corporate that directly reports to The President of Council of Ministers. The Authority objective is to ensure safety of food and drug for human and animal, and safety of biological and chemical substance as well as electronic products.  
@@ -132,7 +147,7 @@ ggplot(HumanDrugs) +
              position = "dodge", stat = "count")+
   theme_classic()+
     scale_y_continuous("Number of Drugs", limits = c(0,7000), expand = c(0,0))+
-labs(title = "Comparing between Saudi manufactureddrugs & non-Saudi manufactured drugs")+
+labs(title = "Comparing between Saudi drugs & non-Saudi drugs")+
 scale_fill_manual(values=c("#BE3144", "#113A5D"))
 
 ```
@@ -144,7 +159,8 @@ HumanDrugs %>%
     group_by( Drug_Status ) %>% 
     summarise( percent = 100 * n() / nrow( HumanDrugs ) ) %>% knitr::kable()
 ```
- overall, Saudi drugs contributes to only 30% of registered drugs.  
+ overall, Saudi drugs contributes to only 30% of registered drugs. 
+ 
  
  #### Exclusive Drugs:
 ```{r, include=FALSE}
@@ -200,12 +216,14 @@ the data for price has extreme values could starts from 0 price (influenza vacci
 
 ```{r,echo=FALSE,eval=TRUE, message=FALSE, warning=FALSE}
 HumanDrugs  %>% filter(`Public price`< 1332,`Distribute area`!="NA" ) %>% 
-  ggplot( aes(x = RegisterYear, y = `Public price`, color=`Distribute area`)) + 
+  ggplot( aes(x = RegisterYear, y = `Public price`, color=`Legal Status`)) + 
  geom_jitter(alpha = 0.7)+
   # geom_ribbon(alpha = 0.3)+
   scale_x_continuous("Register Year", limits = c(1980,2021), expand = c(0,0))+
   facet_grid(~Drug_Status)+
       theme_minimal()+
+   labs(
+       title = "Public Price Vs Registration Year")+
 scale_color_manual(values=c("#BE3144", "#113A5D"))
 ```
 
@@ -303,7 +321,9 @@ ROA10 <- c("Oral", "Intravenous", "Topical", "Parenteral","Subcutaneous",'Ophtha
 ggplot( aes(x = AdministrationRoute, fill = Drug_Status)) + 
   geom_bar(position = position_dodge(width = 0.2)) +
  scale_fill_brewer(palette = "Paired")+
-theme_minimal()
+theme_minimal()+
+   labs(
+       title = "Most Common Used Route of Administration")
 ```
 finding our focus
 
@@ -315,6 +335,9 @@ Saudi manufacturer focus more on oral drugs followed by Iv drugs but then what k
 sdrugs%>% filter ( AdministrationRoute =="Intravenous") %>% group_by (`Scientific Name`) %>% 
   summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% 
   head(10)%>% knitr::kable()
+
+
+
 ```
 ok, that's what I expect, manufacturers focus really on basic treatment which is not not be specific to any disease. we have also import electrolytes &Normal saline from other countries.  
 let us try on oral medications  
@@ -323,7 +346,14 @@ let us try on oral medications
 
 ```{r, echo=FALSE, eval=TRUE}
 sdrugs%>% filter ( AdministrationRoute =="Oral") %>% group_by (`Scientific Name`) %>% 
-  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% knitr::kable()
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% ggplot( aes(x=fct_reorder(`Scientific Name`,`Trade Name`), y=`Trade Name`, fill=`Scientific Name`)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+    scale_fill_brewer(palette="Set3")+
+  labs(x = "Scientific Name",
+       y = "Number of Trade name",
+       title = "Top 10 oral drugs manufactured by different companies in Saudi Arabia")+
+ coord_flip()
 ```
 This is gives us better idea than IV drugs 
 pregabalin in the top,anticonvulsant and anxiolytic medication used to treat epilepsy, neuropathic pain, fibromyalgia, restless leg syndrome, and generalized anxiety disorder. Also, it used for diabetic neuropathy. 
@@ -343,7 +373,15 @@ Honestly, I was expected antidiapetic & antihypertensive medication to be in the
 #### Top 10 oral imported drugs
 ```{r, echo=FALSE, eval=TRUE}
 nosdrugs%>% filter ( AdministrationRoute =="Oral") %>% group_by (`Scientific Name`) %>% 
-  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% knitr::kable()
+  summarise(`Trade Name` = n()) %>% arrange(desc(`Trade Name`))%>% head(10) %>% ggplot( aes(x=fct_reorder(`Scientific Name`,`Trade Name`), y=`Trade Name`, fill=`Scientific Name`)) +
+  geom_bar(stat="identity")+
+  theme_minimal()+
+    scale_fill_brewer(palette="Set3")+
+  labs(x = "Scientific Name",
+       y = "Number of Trade name",
+       title = "Top 10 oral drugs imported by different companies to Saudi Arabia")+
+  coord_flip()
+
 ```
 there are some common drugs betwen top saudi manufacucred and starting by Anti-psycatric indicate increase psychiatric diseases in Saudi Arabia
 let see when quetiapine was registered, 6 times all of them in Saudi Arabia in last 3 years.
@@ -354,6 +392,7 @@ the first national study of COVID-19 impact on mental health from Saudi Arabia, 
 
 ```{r, include=FALSE}
 HumanDrugs%>% filter(`Scientific Name`=='quetiapine') %>% select(RegisterYear,`Manufacture Country`)->m
+
 
 ```
 
@@ -504,35 +543,15 @@ The map is interactive, You can see all countries with the highest price for eac
  HumanDrugs %>% filter (`Authorization Status`=="Suspended")%>% select(`Scientific Name`, `Manufacture Country`,RegisterYear,`Legal Status`) %>% knitr::kable()
 
 ```
-it seems that all of suspneded drugs might have manufacture issues or any other issues rather than a problem in a drug itself, since all drugs are still in use
+it seems that all of suspended drugs might have manufacture issues or any other issues rather than a problem in a drug itself, since all drugs are still in use
 
 
 ## Conclusion 
 
 Although Saudi pharmaceutical companies started in late 90s, but it seems we are very dependents on international pharmaceutical companies. the focus on intravenous medication was on sodium Chloride and other electrolytes, while on oral medication was on pain killers and  antidepressants and anti-psychiatrics, also anti-psychiatrics are top of imported drugs, thus indicate increase mental issues on Saudi Arabia.  we have  emerging of serious diseases such as IHD and stroke which is the main cause of mortality in Saudi Arabia [A,](http://www.healthdata.org/saudi-arabia)[B ](https://www.worldlifeexpectancy.com/country-health-profile/saudi-arabia). even though, patient  with DM, HTN, or cancer may have depression especially if that affect their life, which make increasing of importing anti-psychiatrics is reasonable!
-to conculde, There are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease which is incresing!.
+to conculde, There are opportunities for Saudi pharmaceutical companies  to focus on syntheses of other medications that are used to treat chronic disease which is increasing!.
 
 
-
-```{r, include=FALSE}
-library(plotly)
-
-
-fig <- plot_ly(iris, x = ~Petal.Length, y = ~Petal.Width, type = 'scatter', mode = 'markers',
-        hoverinfo = 'text',
-        text = ~paste('</br> Species: ', Species,
-                      '</br> Petal Length: ', Petal.Length,
-                      '</br> Petal Width: ', Petal.Width))
-
-colnames(HumanDrugs)
-
-fig <- plot_ly(HumanDrugs, x = ~RegisterYear, y = ~`Public price`, type = 'scatter', mode = 'markers',
-        hoverinfo = 'text',
-        text = ~paste('</br> Trade Name : ', `Trade Name`,
-                      '</br> ATC Classification: ', `AtcCode1`,
-                      '</br> Public price: ', `Public price`))
-fig
-```
 
 
 ## References 
