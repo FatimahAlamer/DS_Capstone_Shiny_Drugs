@@ -1,6 +1,8 @@
 # DS_Capstone_SFDA_Analysis_Shiny
 Capstone project for Misk Data Science Immersive Program
 
+![](Shiny Drugs.png)  
+
 
 ## **Links**
 - Click [here](https://fatimahalamer.github.io/DS_Capstone_SFDA_Analysis_Shiny/SFDA_MarkDown.html) for SFDA analysis document  

@@ -17,8 +17,7 @@ HumanDrugs <- subset(HumanDrugs, `Public price`> 0)
 
  # define UI
 ui <- fluidPage(theme = shinytheme("flatly"),
- navbarPage(title = "SFDA Drugs",
-            tabPanel("All Registered Manufacturer Countries with the highest price", leafletOutput("mymap",width = "100%", height=300)),
+ navbarPage(title = "Shiny Drugs: Registered Drugs in Saudi",
             tabPanel("All Registered Drugs in One Plot",
                      sidebarLayout(
                        sidebarPanel(
@@ -44,6 +43,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                          plotlyOutput("plot")
                        )
                      ) ),
+            tabPanel("All Registered Manufacturer Countries with the highest price", leafletOutput("mymap",width = "100%", height=300)),
              tabPanel(title = "Interactive Table for SFDA drugs",
   fluidRow(
     sliderInput(inputId = "RegYe", "Registered Year",

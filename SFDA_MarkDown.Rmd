@@ -1,17 +1,18 @@
 ---
-title: "SFDA Drugs Dataset Analysis"
+title: "Shiny Drugs: SFDA Drugs Dataset Analysis"
 author: "Fatimah Alamer"
 date: "11/7/2021"
 
 output: rmdformats::readthedown
 ---
-# SFDA Drugs
+![](Shiny Drugs.png)  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 
 
 ```
+
 
 
 ```{r, include= FALSE }
@@ -146,7 +147,8 @@ HumanDrugs %>%
 ```
  overall, Saudi drugs contributes to only 30% of registered drugs.  
  
- #### Exclusive Drugs:
+ 
+#### Exclusive Drugs:
 ```{r, include=FALSE}
 
 HumanDrugs %>% distinct(`Scientific Name`, .keep_all = TRUE)-> dHumadrug
