@@ -1,17 +1,18 @@
 ---
-title: "SFDA Drugs Dataset Analysis"
+title: "Shiny Drugs: SFDA Drugs Dataset Analysis"
 author: "Fatimah Alamer"
 date: "11/7/2021"
 
 output: rmdformats::readthedown
 ---
-# SFDA Drugs
+![](logo.png)  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 
 
 ```
+
 
 
 ```{r, include= FALSE }
