@@ -1,11 +1,11 @@
-# DS_Capstone_SFDA_Analysis_Shiny
+# DS_Capstone_Shiny_Drugs_Analysis 
 Capstone project for Misk Data Science Immersive Program
 
-![](Shiny Drugs.png)  
+![Shiny Drugs](https://user-images.githubusercontent.com/89705616/142781811-cd2d1fac-118b-4607-b823-1ce6ef7073b2.png)
 
 
 ## **Links**
-- Click [here](https://fatimahalamer.github.io/DS_Capstone_SFDA_Analysis_Shiny/SFDA_MarkDown.html) for SFDA analysis document  
+- Click [here](https://fatimahalamer.github.io/DS_Capstone_Shiny_Drugs/SFDA_MarkDown.html) for SFDA analysis document  
 - Click [here](https://zuah3d-fatimahalamer.shinyapps.io/Interactive_Shiny_SFDA/) for SFDA shiny app
 
 ## **Summary**
