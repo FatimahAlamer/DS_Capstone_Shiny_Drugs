@@ -1,7 +1,7 @@
 # DS_Capstone_Shiny_Drugs_Analysis 
 Capstone project for Misk Data Science Immersive Program
 
-![Shiny Drugs](https://user-images.githubusercontent.com/89705616/142781811-cd2d1fac-118b-4607-b823-1ce6ef7073b2.png)
+![](https://user-images.githubusercontent.com/89705616/142786203-93ccb4a4-729f-4f88-9ddf-9b7836d22157.png)
 
 
 ## **Links**
